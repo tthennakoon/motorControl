@@ -1,0 +1,17 @@
+import serial
+import time
+
+# Replace 'COM3' with the appropriate port for your Arduino
+ser = serial.Serial('COM3', 9600, timeout=1)
+time.sleep(2)  # Allow time for Arduino to initialize
+
+# Example coordinates in degrees
+motor1_degrees = 45
+motor2_degrees = 45
+
+# Send coordinates to Arduino
+coordinates = f"{motor1_degrees},{motor2_degrees}\n"
+ser.write(coordinates.encode())
+
+# Close the serial connection
+ser.close(
