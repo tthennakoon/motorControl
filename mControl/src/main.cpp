@@ -12,6 +12,11 @@ void setup()
   Serial.begin(9600);
 }
 
+//void limiting
+
+//void splitfuc():
+
+
 void moveStepper(int steps, int direction, int initialDelayMicros)
 {
   digitalWrite(dirPin, direction);
