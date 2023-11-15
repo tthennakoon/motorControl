@@ -1,35 +1,51 @@
-// Model,  Holding Torque, Rated voltage,  Shaft,  Step angle, Motor length, Rated current,  Inductance
-// 2SHDC3025-24B  40 N·cm,  3.96 V, Ø 5 mm Single,  1.8°, 40 mm,  0.9A
 #include <Arduino.h>
-const int dirPin = 2;
-const int stepPin = 3;
-const int lmswitch1 = 6;
+
+const int PUL_PIN = 2;      // PUL-Step Pulse
+const int DIR_PIN = 3;      // DIR-Direction
+const int ENA_PIN = 4;      // ENA-Enable
+const int LMSWITCH_PIN = 6; // Limit switch input pin
 
 const int stepsPerRevolution = 200;  // Adjust for your motor's steps per revolution
+const int stepsPerRound = stepsPerRevolution * 10;  // 10 rounds
+
+const float pi = 3.14159265359;
 
 void setup() {
-  pinMode(stepPin, OUTPUT);
-  pinMode(dirPin, OUTPUT);
-  pinMode(lmswitch1, INPUT_PULLUP);
+  pinMode(PUL_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+  pinMode(ENA_PIN, OUTPUT);
+  pinMode(LMSWITCH_PIN, INPUT_PULLUP);
   Serial.begin(9600);
 }
 
-void moveStepper(int steps, int direction, int delayMicros) {
-  digitalWrite(dirPin, direction);
-  for (int x = 0; x < steps; x++) {
-    digitalWrite(stepPin, HIGH);
-    delayMicroseconds(delayMicros);
-    digitalWrite(stepPin, LOW);
-    delayMicroseconds(delayMicros);
+void moveStepperSmooth(int steps, int direction) {
+  digitalWrite(DIR_PIN, direction);
+  digitalWrite(ENA_PIN, LOW);  // Enable the motor driver
+
+  float accelerationFactor = 0.0;
+
+  for (int i = 0; i < steps; i++) {
+    accelerationFactor = sin((i / (float)steps) * pi);
+    
+    digitalWrite(PUL_PIN, HIGH);
+    delayMicroseconds(1000 + 1000 * accelerationFactor); // Adjust the delay based on your motor's specifications
+    digitalWrite(PUL_PIN, LOW);
+    delayMicroseconds(1000 + 1000 * accelerationFactor); // Adjust the delay based on your motor's specifications
   }
+
+  digitalWrite(ENA_PIN, HIGH);  // Disable the motor driver
 }
 
 void loop() {
   // Homing Sequence
-  while (digitalRead(lmswitch1) == HIGH) {
-    moveStepper(1, LOW, 1000);  // Move one step at a time until lmswitch1 is triggered
+  while (digitalRead(LMSWITCH_PIN) == HIGH) {
+    moveStepperSmooth(1, LOW);  // Move one step at a time until the limit switch is triggered
   }
-  // At this point, lmswitch1 is triggered
-  moveStepper(50, HIGH, 1000);  // Move the stepper a bit in the opposite direction
+
+  // At this point, the limit switch is triggered
+  delay(1000);  // Wait for 1 second
+
+  moveStepperSmooth(stepsPerRound, HIGH);  // Move the stepper in the opposite direction for 10 rounds
+
   // Continue with the rest of the homing sequence or other actions
 }

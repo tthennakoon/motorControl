@@ -1,55 +1,46 @@
-#include <AccelStepper.h>
+#include <Arduino.h>
 
-// Define the stepper motor connections and steps per revolution
-#define motorPin1 2
-#define motorPin2 3
-#define stepsPerRevolution 200 // Adjust this based on your motor specs
+const int dirPin = 3;
+const int stepPin = 2;
 
-AccelStepper stepper1(AccelStepper::FULL4WIRE, 2, 3, 4, 5);
-AccelStepper stepper2(AccelStepper::FULL4WIRE, 8, 9, 10, 11);
+const int stepsPerRevolution = 200;  // Adjust for your motor's steps per revolution
 
-void setup()
-{
+void setup() {
+  pinMode(stepPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
   Serial.begin(9600);
-  Serial.println("Arduino is ready");
 }
 
-void moveMotor(AccelStepper &stepper, int targetSteps)
-{
-  // Set the target position
-  stepper.moveTo(targetSteps);
+void moveStepper(int steps, int direction, int initialDelayMicros) {
+  digitalWrite(dirPin, direction);
 
-  // Move the motor until it reaches the target position
-  while (stepper.distanceToGo() != 0)
-  {
-    stepper.run();
-  
+  int currentDelayMicros = initialDelayMicros;
+
+  for (int x = 0; x < steps; x++) {
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(currentDelayMicros);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(currentDelayMicros);
+
+    // Gradually decrease delay for smoother acceleration
+    if (currentDelayMicros > 500) {
+      currentDelayMicros -= 10;
+    }
   }
 }
 
-int degreesToSteps(float degrees)
-{
-  // Convert degrees to steps based on steps per revolution
-  return degrees * stepsPerRevolution / 360;
-}
+void loop() {
+  // Adjust the speed and number of rounds as needed
+  int desiredSpeed = 20;  // Adjust the desired speed in steps per second
+  int numberOfRounds = 5;  // Adjust the number of rounds to move the motor
 
-void loop()
-{
-  if (Serial.available() > 0)
-  {
-    // Read the incoming data as a string
-    String input = Serial.readStringUntil('\n');
+  int stepsToMove = numberOfRounds * stepsPerRevolution;
+  int initialDelayMicros = 1000;  // Adjust the initial delay as needed
 
-    // Parse the input string to get motor positions in degrees
-    float degrees1 = input.substring(0, input.indexOf(',')).toFloat();
-    float degrees2 = input.substring(input.indexOf(',') + 1).toFloat();
+  // Move the stepper motor with specified speed and number of rounds
+  moveStepper(stepsToMove, HIGH, initialDelayMicros);
 
-    // Convert degrees to steps
-    int steps1 = degreesToSteps(degrees1);
-    int steps2 = degreesToSteps(degrees2);
-
-    // Move the motors to the specified positions
-    moveMotor(stepper1, steps1);
-    moveMotor(stepper2, steps2);
-  }
+  // Stop the motor
+  digitalWrite(stepPin, LOW);
+  delay(2500);  // Adjust the delay as needed
 }
