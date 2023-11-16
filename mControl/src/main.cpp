@@ -1,59 +1,83 @@
 #include <Arduino.h>
 
-const int dirPin = 3;
-const int stepPin = 2;
+const int rotateDirPin = 3;
+const int rotateStepPin = 2;
 
-const int stepsPerRevolution = 200; // Adjust for your motor's steps per revolution
+const int linearDirPin = 5;
+const int linearStepPin = 4;
+
+const int stepsPerRevolutionRotation = 800; // Adjust for your motor's steps per revolution
+const int stepsPerRevolutionLinear = 1600;  // Adjust for your motor's steps per revolution
 
 void setup()
 {
-  pinMode(stepPin, OUTPUT);
-  pinMode(dirPin, OUTPUT);
+  pinMode(rotateStepPin, OUTPUT);
+  pinMode(rotateDirPin, OUTPUT);
+  pinMode(linearStepPin, OUTPUT);
+  pinMode(linearDirPin, OUTPUT);
+
   Serial.begin(9600);
 }
 
-//void limiting
-
-//void splitfuc():
-
-
-void moveStepper(int steps, int direction, int initialDelayMicros)
+void moveStepper(int steps, int dir, int initialDelayMicros, int stepPin, int dirPin)
 {
-  digitalWrite(dirPin, direction);
+  digitalWrite(dirPin, dir);
 
-  int currentDelayMicros = initialDelayMicros;
-
-  for (int x = 0; x < steps; x++)
+  for (int i = 0; i < steps; i++)
   {
     digitalWrite(stepPin, HIGH);
-    delayMicroseconds(currentDelayMicros);
+    delayMicroseconds(initialDelayMicros);
     digitalWrite(stepPin, LOW);
-    delayMicroseconds(currentDelayMicros);
-
-    // Gradually decrease delay for smoother acceleration
-    if (currentDelayMicros > 500)
-    {
-      currentDelayMicros -= 10;
-    }
+    delayMicroseconds(initialDelayMicros);
   }
+}
+
+void moveStepperMotor(int steps, int initialDelayMicros, int duration, int stepPin, int dirPin)
+{
+  unsigned long startTime = millis();
+  while (millis() - startTime < (unsigned long)duration)
+  {
+    moveStepper(steps, LOW, initialDelayMicros, stepPin, dirPin);
+  }
+  digitalWrite(stepPin, LOW);
+  delay(2000);
 }
 
 void loop()
 {
-  // Adjust the speed and number of rounds as needed
-  int desiredSpeed = 20;  // Adjust the desired speed in steps per second
-  int numberOfRounds = 5; // Adjust the number of rounds to move the motor
-  bool Direction = true;
+  // Rotate Motor Parameters
+  int rotationRotate = 3;
+  int rotateSteps = rotationRotate * stepsPerRevolutionRotation; // Adjust the number of steps for rotation
+  int rotateInitialDelayMicros = 1000;                           // Adjust the initial delay for rotation
+  int rotateDuration = 5000;
 
-  int stepsToMove = numberOfRounds * stepsPerRevolution;
-  int initialDelayMicros = 1000; // Adjust the initial delay as needed
+  // Linear Motor Parameters
+  int rotationLinear = 3;
+  int linearSteps = rotationLinear * stepsPerRevolutionLinear; // 20 rounds for linear motion
+  int linearInitialDelayMicros = 1000;                         // Adjust the initial delay for linear motion
+  int linearDuration = 5000;
 
-  // Move the stepper motor with specified speed and number of rounds
-  moveStepper(stepsToMove, Direction ? HIGH : LOW, initialDelayMicros);
+  moveStepperMotor(rotateSteps, rotateInitialDelayMicros, rotateDuration, rotateStepPin, rotateDirPin);
+  moveStepperMotor(linearSteps, linearInitialDelayMicros, linearDuration, linearStepPin, linearDirPin);
 
-  Direction = !Direction;
+  // Rotate Motor for 15 seconds
+  // unsigned long rotateStartTime = millis();
+  // while (millis() - rotateStartTime < (unsigned long)rotateDuration)
+  // {
+  // moveStepperMotor(rotateSteps, rotateInitialDelayMicros, rotateDuration, rotateStepPin, rotateDirPin);
+  // }
 
-  // Stop the motor
-  digitalWrite(stepPin, LOW);
-  delay(2500); // Adjust the delay as needed
+  // Linear Motor for 20 seconds
+  // unsigned long linearStartTime = millis();
+  // while (millis() - linearStartTime < (unsigned long)linearDuration)
+  // {
+  // moveStepperMotor(linearSteps, linearInitialDelayMicros, linearDuration, linearStepPin, linearDirPin);
+  // }
+
+  // Stop both motors
+  digitalWrite(rotateStepPin, LOW);
+  digitalWrite(linearStepPin, LOW);
+
+  // Introduce a delay before the next iteration
+  delay(2000);
 }
