@@ -1,83 +1,68 @@
 #include <Arduino.h>
 
-const int rotateDirPin = 3;
-const int rotateStepPin = 2;
+const int dirPinRotatable = 3;
+const int stepPinRotatable = 2;
 
-const int linearDirPin = 5;
-const int linearStepPin = 4;
+const int dirPinLinear = 5;
+const int stepPinLinear = 4;
 
-const int stepsPerRevolutionRotation = 800; // Adjust for your motor's steps per revolution
-const int stepsPerRevolutionLinear = 1600;  // Adjust for your motor's steps per revolution
+#define STEPS_PER_REVOLUTION 800
 
 void setup()
 {
-  pinMode(rotateStepPin, OUTPUT);
-  pinMode(rotateDirPin, OUTPUT);
-  pinMode(linearStepPin, OUTPUT);
-  pinMode(linearDirPin, OUTPUT);
+  pinMode(stepPinRotatable, OUTPUT);
+  pinMode(dirPinRotatable, OUTPUT);
+  pinMode(dirPinLinear, OUTPUT);
+  pinMode(stepPinLinear, OUTPUT);
 
   Serial.begin(9600);
 }
 
-void moveStepper(int steps, int dir, int initialDelayMicros, int stepPin, int dirPin)
+void moveStepperMotor(int steps, int direction, int initialDelayMicros, int stepPin, int dirPin)
 {
-  digitalWrite(dirPin, dir);
+  digitalWrite(dirPin, direction);
 
-  for (int i = 0; i < steps; i++)
+  int currentDelayMicros = initialDelayMicros;
+  for (int x = 0; x < steps; x++)
   {
     digitalWrite(stepPin, HIGH);
-    delayMicroseconds(initialDelayMicros);
+    delayMicroseconds(currentDelayMicros);
     digitalWrite(stepPin, LOW);
-    delayMicroseconds(initialDelayMicros);
+    delayMicroseconds(currentDelayMicros);
+
+    if (currentDelayMicros > 500)
+    {
+      currentDelayMicros -= 5;
+    }
   }
 }
 
-void moveStepperMotor(int steps, int initialDelayMicros, int duration, int stepPin, int dirPin)
+int calculateSteps(int rotations)
 {
-  unsigned long startTime = millis();
-  while (millis() - startTime < (unsigned long)duration)
-  {
-    moveStepper(steps, LOW, initialDelayMicros, stepPin, dirPin);
-  }
-  digitalWrite(stepPin, LOW);
-  delay(2000);
+  return rotations * STEPS_PER_REVOLUTION;
 }
 
 void loop()
 {
-  // Rotate Motor Parameters
-  int rotationRotate = 3;
-  int rotateSteps = rotationRotate * stepsPerRevolutionRotation; // Adjust the number of steps for rotation
-  int rotateInitialDelayMicros = 1000;                           // Adjust the initial delay for rotation
-  int rotateDuration = 5000;
+  // Rotatable Motor Parameters
+  int rotationRotatable = 3;
+  int stepsRotatable = calculateSteps(rotationRotatable);
+  int initialDelayMicrosRotatable = 1000;
+  // int durationRotatable = 5000;
+  bool directionRotatable = LOW;
 
   // Linear Motor Parameters
   int rotationLinear = 3;
-  int linearSteps = rotationLinear * stepsPerRevolutionLinear; // 20 rounds for linear motion
-  int linearInitialDelayMicros = 1000;                         // Adjust the initial delay for linear motion
-  int linearDuration = 5000;
+  int stepsLinear = calculateSteps(rotationLinear);
+  int initialDelayMicrosLinear = 1000;
+  // int durationLinear = 5000;
+  bool directionLinear = LOW;
 
-  moveStepperMotor(rotateSteps, rotateInitialDelayMicros, rotateDuration, rotateStepPin, rotateDirPin);
-  moveStepperMotor(linearSteps, linearInitialDelayMicros, linearDuration, linearStepPin, linearDirPin);
+  moveStepperMotor(stepsRotatable, directionRotatable, initialDelayMicrosRotatable, stepPinLinear, dirPinLinear);
+  moveStepperMotor(stepsLinear, directionLinear, initialDelayMicrosLinear, stepPinRotatable, dirPinRotatable);
 
-  // Rotate Motor for 15 seconds
-  // unsigned long rotateStartTime = millis();
-  // while (millis() - rotateStartTime < (unsigned long)rotateDuration)
-  // {
-  // moveStepperMotor(rotateSteps, rotateInitialDelayMicros, rotateDuration, rotateStepPin, rotateDirPin);
-  // }
+  digitalWrite(stepPinRotatable, LOW);
+  digitalWrite(stepPinLinear, LOW);
 
-  // Linear Motor for 20 seconds
-  // unsigned long linearStartTime = millis();
-  // while (millis() - linearStartTime < (unsigned long)linearDuration)
-  // {
-  // moveStepperMotor(linearSteps, linearInitialDelayMicros, linearDuration, linearStepPin, linearDirPin);
-  // }
-
-  // Stop both motors
-  digitalWrite(rotateStepPin, LOW);
-  digitalWrite(linearStepPin, LOW);
-
-  // Introduce a delay before the next iteration
   delay(2000);
 }
