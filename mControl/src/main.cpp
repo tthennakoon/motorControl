@@ -58,8 +58,8 @@ void loop()
   // int durationLinear = 5000;
   bool directionLinear = LOW;
 
-  moveStepperMotor(stepsRotatable, directionRotatable, initialDelayMicrosRotatable, stepPinLinear, dirPinLinear);
-  moveStepperMotor(stepsLinear, directionLinear, initialDelayMicrosLinear, stepPinRotatable, dirPinRotatable);
+  moveStepperMotor(stepsRotatable, directionRotatable, initialDelayMicrosRotatable, stepPinRotatable, dirPinRotatable);
+  moveStepperMotor(stepsLinear, directionLinear, initialDelayMicrosLinear, stepPinLinear, dirPinLinear);
 
   digitalWrite(stepPinRotatable, LOW);
   digitalWrite(stepPinLinear, LOW);
