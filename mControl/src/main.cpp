@@ -62,7 +62,7 @@ void loop()
   for (int i = 0; i < stopPointsLinear; i++)
   {
     // Move Rotatable Motor according to stopPointsRotatable
-    for (int i = 0; i < stopPointsRotatable; i++)
+    for (int j = 0; j < stopPointsRotatable; j++)
     {
       moveStepperMotor(stepsRotatable, directionRotatable, initialDelayMicrosRotatable, stepPinRotatable, dirPinRotatable);
     }
