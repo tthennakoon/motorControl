@@ -11,20 +11,29 @@ def get_machine_status():
     response = arduino.readline().decode().strip()
     return response
 
-
 status = get_machine_status()
 print(f"Machine status: {status}")
+
+def capture_image():
+    print("Image capture command sent to Arduino.")
+
+i = 0
+j = 0
 
 try:
     while True:
         if arduino.in_waiting > 0:
             message = arduino.readline().decode().strip()
-            if message == "Image captured":
-                capture_image()
-                time.sleep(0.1)
-                
+            if message.startswith("Image captured at i = "):
+                # Extracting i and j values from the received message
+                parts = message.split(", j = ")
+                i_val = int(parts[0].split(" = ")[1])
+                j_val = int(parts[1])
+                print(f"Extracted values: i = {i_val}, j = {j_val}")
+                i += 1
+                j += 1
+                time.sleep(0.1)  # Small delay to prevent repeated triggering
 except KeyboardInterrupt:
     pass
 
 arduino.close()  # Close serial connection
-

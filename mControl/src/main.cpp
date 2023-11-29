@@ -129,10 +129,14 @@ void loop()
                 {
                     moveRotatableMotor(stopPointsStepRotatable, directionRotatable);
                     delay(2000);
+                    Serial.print("Image captured at i = ");
+                    Serial.print(i);
+                    Serial.print(", j = ");
+                    Serial.println(j);
+                    delay(1000);
                 }
                 moveLinearMotor(5000, HIGH);
                 delay(2000);
-                Serial.println("Image captured");
 
                 directionRotatable = !directionRotatable;
             }
